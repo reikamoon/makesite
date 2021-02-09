@@ -7,6 +7,7 @@ import (
 	"os"
 	"strings"
 	"text/template"
+	"path/filepath"
 )
 
 // Page holds all the information we need to generate a new
@@ -78,6 +79,28 @@ func renderTemplateFromPage(templateFilePath string, page Page) {
 // 	}
 // }
 
+func findTxtFiles(root, pattern string) ([]string, error) {
+	var matches []string
+	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if info.IsDir() {
+			return nil
+		}
+		if matched, err := filepath.Match(pattern, filepath.Base(path)); err != nil {
+			return err
+		} else if matched {
+			matches = append(matches, path)
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return matches, nil
+}
+
 
 func main() {
 	// This flag represents the name of any `.txt` file in the same directory as your program.
@@ -100,4 +123,7 @@ func main() {
 
 	// Use the struct to generate a new HTML page based on the provided template.
 	renderTemplateFromPage("template.tmpl", newPage)
+
+	//find all txt files
+	files, err := findTxtFiles("/root/", "*.txt")
 }
